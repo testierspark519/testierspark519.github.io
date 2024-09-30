@@ -3,161 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Línea del Tiempo del Proceso Legislativo</title>
+    <title>Proceso Legislativo</title>
     <style>
         body {
-            background-color: #0d0d0d;
+            background-color: #0D0D0D;
+            color: #E0E0E0;
             font-family: Arial, sans-serif;
-            color: #fff;
-            overflow-x: hidden;
         }
-        h1, h2 {
+        h1 {
             text-align: center;
-            color: #39ff14;
+            color: #00FF80;
+            margin-top: 20px;
+        }
+        h2 {
+            text-align: center;
+            color: #00FF80;
+            margin-bottom: 40px;
         }
         .timeline {
             position: relative;
-            margin: 50px auto;
-            padding: 20px 0;
-            width: 90%;
-        }
-        .timeline::after {
-            content: '';
-            position: absolute;
-            width: 6px;
-            background-color: #39ff14;
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            margin-left: -3px;
-        }
-        .container {
-            padding: 10px 40px;
-            position: relative;
-            background-color: inherit;
-            width: 50%;
-        }
-        .container.left {
-            left: 0;
-        }
-        .container.right {
-            left: 50%;
-        }
-        .container::after {
-            content: '';
-            position: absolute;
-            width: 25px;
-            height: 25px;
-            right: -17px;
-            background-color: #39ff14;
-            border: 4px solid #ffcc00;
-            top: 15px;
-            border-radius: 50%;
-            z-index: 1;
-        }
-        .right::after {
-            left: -16px;
-        }
-        .content {
+            margin: 0 auto;
             padding: 20px;
-            background-color: #222;
-            position: relative;
+            max-width: 800px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            height: 100%;
+            border-left: 2px solid #00FF80;
+            top: 0;
+        }
+        .event {
+            background: #1E1E1E;
             border-radius: 6px;
+            margin: 20px 0;
+            padding: 15px;
+            position: relative;
+            transition: transform 0.3s;
+            width: 45%;
+            color: #E0E0E0;
         }
-        .container.left .content {
-            left: 10px;
+        .event:hover {
+            transform: scale(1.05);
         }
-        .container.right .content {
-            left: -10px;
+        .event.left {
+            left: 0;
+            transform: translateX(-30%);
         }
-        a {
-            color: #39ff14;
-            text-decoration: none;
+        .event.right {
+            left: 50%;
+            transform: translateX(30%);
         }
-        a:hover {
-            text-decoration: underline;
+        .event h3 {
+            color: #00FF80;
         }
-        /* Animaciones */
-        .content {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.6s ease forwards;
+        .arrow {
+            position: absolute;
+            top: 15px;
+            left: -20px;
+            width: 20px;
+            height: 20px;
+            border: solid #00FF80;
+            border-width: 0 3px 3px 0;
+            transform: rotate(135deg);
+            display: none;
         }
-        .container.left .content {
-            animation-delay: 0.3s;
+        .event:hover .arrow {
+            display: block;
         }
-        .container.right .content {
-            animation-delay: 0.6s;
-        }
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #00FF80;
         }
     </style>
 </head>
 <body>
-    <h1>Línea del Tiempo del Proceso Legislativo</h1>
-
+    <h1>Proceso Legislativo</h1>
+    <h2>Universidad de Quintana Roo - Estado de Quintana Roo</h2>
     <div class="timeline">
-        <!-- Iniciativa -->
-        <div class="container left">
-            <div class="content">
-                <h2>Iniciativa</h2>
-                <p>Es la propuesta de ley que presentan los legisladores, el Ejecutivo, o ciudadanos.</p>
-                <a href="iniciativa.html">Leer más</a>
-            </div>
+        <div class="event left">
+            <div class="arrow"></div>
+            <h3>1. Iniciativa</h3>
+            <p>Propuesta de ley presentada por el Presidente, legisladores, o ciudadanos.</p>
+            <p><a href="iniciativa.html">Más información</a></p>
         </div>
-
-        <!-- Discusión -->
-        <div class="container right">
-            <div class="content">
-                <h2>Discusión</h2>
-                <p>Las cámaras debaten la iniciativa para asegurar que sea justa y necesaria.</p>
-                <a href="discusion.html">Leer más</a>
-            </div>
+        <div class="event right">
+            <div class="arrow"></div>
+            <h3>2. Discusión</h3>
+            <p>Revisión y análisis de la iniciativa en comisiones y en el pleno.</p>
+            <p><a href="discusion.html">Más información</a></p>
         </div>
-
-        <!-- Aprobación -->
-        <div class="container left">
-            <div class="content">
-                <h2>Aprobación</h2>
-                <p>La cámara donde se discute primero aprueba o rechaza la iniciativa.</p>
-                <a href="aprobacion.html">Leer más</a>
-            </div>
+        <div class="event left">
+            <div class="arrow"></div>
+            <h3>3. Aprobación</h3>
+            <p>Votación en el pleno de la Cámara de Diputados y Senado.</p>
+            <p><a href="aprobacion.html">Más información</a></p>
         </div>
-
-        <!-- Sanción -->
-        <div class="container right">
-            <div class="content">
-                <h2>Sanción</h2>
-                <p>El Ejecutivo revisa y acepta la ley aprobada, o la rechaza mediante veto.</p>
-                <a href="sancion.html">Leer más</a>
-            </div>
+        <div class="event right">
+            <div class="arrow"></div>
+            <h3>4. Sanción</h3>
+            <p>Aprobación final por el Presidente de la República.</p>
+            <p><a href="sancion.html">Más información</a></p>
         </div>
-
-        <!-- Publicación -->
-        <div class="container left">
-            <div class="content">
-                <h2>Publicación</h2>
-                <p>La ley se publica en el Diario Oficial de la Federación para su conocimiento.</p>
-                <a href="publicacion.html">Leer más</a>
-            </div>
+        <div class="event left">
+            <div class="arrow"></div>
+            <h3>5. Publicación</h3>
+            <p>Publicación en el Diario Oficial de la Federación para su divulgación.</p>
+            <p><a href="publicacion.html">Más información</a></p>
         </div>
-
-        <!-- Inicio de Vigencia -->
-        <div class="container right">
-            <div class="content">
-                <h2>Inicio de Vigencia</h2>
-                <p>La ley entra en vigor después de un periodo determinado, si no se especifica es de 3 días.</p>
-                <a href="inicio_vigencia.html">Leer más</a>
-            </div>
+        <div class="event right">
+            <div class="arrow"></div>
+            <h3>6. Inicio de Vigencia</h3>
+            <p>La ley entra en vigor a los 90 días después de su publicación.</p>
+            <p><a href="inicio_vigencia.html">Más información</a></p>
         </div>
     </div>
-
-    <footer style="text-align:center; margin-top: 50px;">
-        <p>Equipo de trabajo: Mirley Naomi Jara Alfaro y Angel Emanuel Guillen Alfaro</p>
+    <footer>
+        <p>Elaborado por: Ángel Emanuel Guillen Alfaro y Mirley Naomi Jara Alfaro</p>
     </footer>
 </body>
 </html>
