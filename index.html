@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Nuestra Historia · Sopa de Letras</title>
+
+<style>
+/* ==========================================================================
+   NUESTRA HISTORIA — HOJA DE ESTILOS
+   Estructura:
+     1. Reset y variables globales
+     2. Fondo de partículas
+     3. Contenedor principal / pantallas
+     4. Pantalla de inicio
+     5. Pantalla de selección de dificultad
+     6. Pantalla de juego (tablero + panel)
+     7. Modal de recuerdo encontrado
+     8. Pantalla final (carta + confeti + corazones)
+     9. Componentes reutilizables (botones, tarjetas)
+    10. Animaciones
+    11. Responsive
+   ========================================================================== */
+
+/* ---------- 1. RESET Y VARIABLES GLOBALES ---------- */
+:root{
+  --bg-primary:#0D0618;
+  --bg-secondary:#1B1030;
+  --card-bg:#24113B;
+  --purple-main:#7B2CBF;
+  --purple-bright:#9D4EDD;
+  --detail:#C77DFF;
+  --text:#F8F4FF;
+
+  --glass-bg:rgba(36,17,59,0.55);
+  --glass-border:rgba(199,125,255,0.18);
+  --shadow-soft:0 20px 60px rgba(0,0,0,0.45);
+  --shadow-glow:0 0 40px rgba(157,78,221,0.35);
+
+  --font-display:'Georgia','Iowan Old Style','Palatino Linotype',serif;
+  --font-body:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+
+  --radius-lg:24px;
+  --radius-md:16px;
+  --radius-sm:10px;
+
+  --ease-soft:cubic-bezier(.22,1,.36,1);
+  --ease-bounce:cubic-bezier(.34,1.56,.64,1);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:var(--bg-primary);
+  color:var(--text);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+}
+
+body{
+  background:
+    radial-gradient(circle at 20% 20%, rgba(123,44,191,0.20), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(157,78,221,0.15), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(199,125,255,0.10), transparent 50%),
+    var(--bg-primary);
+}
+
+::selection{ background:var(--purple-bright); color:var(--bg-primary); }
+
+button{ font-family:inherit; cursor:pointer; }
+
+::-webkit-scrollbar{ width:8px; }
+::-webkit-scrollbar-thumb{ background:var(--purple-main); border-radius:8px; }
+::-webkit-scrollbar-track{ background:var(--bg-secondary); }
+
+/* ---------- 2. FONDO DE PARTÍCULAS ---------- */
+#particle-canvas{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:0;
+  pointer-events:none;
+}
+
+/* ---------- 3. CONTENEDOR PRINCIPAL / PANTALLAS ---------- */
+#app{
+  position:relative;
+  z-index:1;
+  width:100%;
+  height:100%;
+}
+
+.screen{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:32px 20px;
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(18px) scale(0.98);
+  transition:opacity .6s var(--ease-soft), transform .6s var(--ease-soft), visibility 0s linear .6s;
+}
+
+.screen.active{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0) scale(1);
+  transition:opacity .6s var(--ease-soft), transform .6s var(--ease-soft), visibility 0s;
+}
+
+.eyebrow{
+  letter-spacing:.35em;
+  text-transform:uppercase;
+  font-size:.68rem;
+  color:var(--detail);
+  opacity:.85;
+  margin-bottom:14px;
+  font-weight:600;
+}
+
+/* ---------- 4. PANTALLA DE INICIO ---------- */
+#screen-start{
+  text-align:center;
+}
+
+.start-glow{
+  position:absolute;
+  width:520px;
+  height:520px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(157,78,221,0.35), transparent 65%);
+  filter:blur(10px);
+  animation:pulseGlow 6s ease-in-out infinite;
+  z-index:-1;
+}
+
+.start-title{
+  font-family:var(--font-display);
+  font-size:clamp(2.4rem, 6vw, 4.2rem);
+  font-weight:400;
+  font-style:italic;
+  margin:0 0 18px 0;
+  background:linear-gradient(120deg, var(--text) 20%, var(--detail) 55%, var(--purple-bright) 80%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  letter-spacing:.01em;
+  animation:fadeUp 1s var(--ease-soft) both;
+}
+
+.start-subtitle{
+  font-size:clamp(.95rem, 2vw, 1.15rem);
+  color:rgba(248,244,255,0.7);
+  margin:0 0 46px 0;
+  font-weight:300;
+  letter-spacing:.02em;
+  animation:fadeUp 1s var(--ease-soft) .15s both;
+}
+
+.heart-divider{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:38px;
+  animation:fadeUp 1s var(--ease-soft) .05s both;
+}
+.heart-divider .line{
+  width:52px;
+  height:1px;
+  background:linear-gradient(90deg, transparent, var(--purple-bright), transparent);
+}
+.heart-divider .mark{ color:var(--detail); font-size:1rem; }
+
+.btn-primary-wrap{
+  animation:fadeUp 1s var(--ease-soft) .3s both;
+}
+
+/* ---------- 5. SELECCIÓN DE DIFICULTAD ---------- */
+#screen-difficulty .difficulty-title{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:clamp(1.8rem, 4vw, 2.6rem);
+  margin:0 0 8px 0;
+  text-align:center;
+}
+#screen-difficulty .difficulty-subtitle{
+  color:rgba(248,244,255,.6);
+  margin:0 0 44px 0;
+  font-size:.95rem;
+  text-align:center;
+}
+
+.difficulty-grid{
+  display:flex;
+  gap:22px;
+  flex-wrap:wrap;
+  justify-content:center;
+  max-width:920px;
+}
+
+.difficulty-card{
+  position:relative;
+  width:260px;
+  padding:34px 26px;
+  background:var(--glass-bg);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  text-align:center;
+  transition:transform .45s var(--ease-bounce), box-shadow .45s var(--ease-soft), border-color .3s ease;
+  overflow:hidden;
+}
+.difficulty-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(160deg, rgba(157,78,221,0.15), transparent 55%);
+  opacity:0;
+  transition:opacity .4s ease;
+}
+.difficulty-card:hover{
+  transform:translateY(-10px);
+  border-color:var(--purple-bright);
+  box-shadow:var(--shadow-glow);
+}
+.difficulty-card:hover::before{ opacity:1; }
+
+.difficulty-icon{
+  font-size:2.2rem;
+  margin-bottom:16px;
+  filter:drop-shadow(0 0 12px rgba(157,78,221,0.6));
+}
+.difficulty-name{
+  font-family:var(--font-display);
+  font-size:1.4rem;
+  font-style:italic;
+  margin:0 0 10px 0;
+  color:var(--text);
+}
+.difficulty-desc{
+  font-size:.82rem;
+  color:rgba(248,244,255,.55);
+  line-height:1.55;
+  margin:0;
+}
+
+.back-link{
+  margin-top:40px;
+  background:none;
+  border:none;
+  color:rgba(248,244,255,.5);
+  font-size:.85rem;
+  letter-spacing:.05em;
+  transition:color .3s ease;
+}
+.back-link:hover{ color:var(--detail); }
+
+/* ---------- 6. PANTALLA DE JUEGO ---------- */
+#screen-game{
+  justify-content:flex-start;
+  padding-top:22px;
+  gap:18px;
+}
+
+.game-header{
+  width:100%;
+  max-width:900px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+.game-title-block{
+  display:flex;
+  flex-direction:column;
+}
+.game-title-block .label{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:1.3rem;
+}
+.game-title-block .sub{
+  font-size:.72rem;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--detail);
+  opacity:.8;
+}
+
+.progress-pill{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 20px;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:100px;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+.progress-pill .progress-label{
+  font-size:.72rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:rgba(248,244,255,.6);
+}
+.progress-pill .progress-count{
+  font-family:var(--font-display);
+  font-size:1.1rem;
+  color:var(--purple-bright);
+  font-weight:600;
+}
+.progress-track{
+  width:90px;
+  height:5px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.08);
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg, var(--purple-main), var(--purple-bright), var(--detail));
+  border-radius:10px;
+  transition:width .5s var(--ease-soft);
+}
+
+.exit-btn{
+  background:none;
+  border:1px solid var(--glass-border);
+  color:rgba(248,244,255,.55);
+  padding:9px 16px;
+  border-radius:100px;
+  font-size:.78rem;
+  transition:all .3s ease;
+}
+.exit-btn:hover{ color:var(--text); border-color:var(--purple-bright); }
+
+.board-wrap{
+  position:relative;
+  padding:18px;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:var(--shadow-soft);
+  overflow:auto;
+  max-width:min(92vw, 720px);
+  max-height:min(64vh, 720px);
+}
+
+#grid{
+  display:grid;
+  gap:2px;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:none;
+}
+
+.cell{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  aspect-ratio:1/1;
+  min-width:26px;
+  background:rgba(255,255,255,0.02);
+  border-radius:6px;
+  font-weight:600;
+  color:rgba(248,244,255,.75);
+  font-size:0.95rem;
+  transition:background .15s ease, color .15s ease, transform .15s ease;
+  position:relative;
+}
+.cell.selecting{
+  background:rgba(157,78,221,0.35);
+  color:#fff;
+  transform:scale(1.05);
+}
+.cell.found{
+  background:linear-gradient(135deg, var(--purple-main), var(--purple-bright));
+  color:#fff;
+  box-shadow:0 0 14px rgba(157,78,221,0.6);
+  animation:foundPop .5s var(--ease-bounce);
+}
+
+.hint-text{
+  font-size:.78rem;
+  color:rgba(248,244,255,.4);
+  text-align:center;
+  max-width:520px;
+  line-height:1.6;
+}
+
+/* ---------- 7. MODAL DE RECUERDO ENCONTRADO ---------- */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(6,2,14,0.65);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .45s var(--ease-soft), visibility 0s linear .45s;
+  padding:20px;
+}
+.modal-overlay.visible{
+  opacity:1;
+  visibility:visible;
+  transition:opacity .45s var(--ease-soft), visibility 0s;
+}
+
+.memory-card{
+  width:100%;
+  max-width:420px;
+  background:linear-gradient(160deg, var(--card-bg), var(--bg-secondary));
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:44px 36px;
+  text-align:center;
+  box-shadow:var(--shadow-soft), var(--shadow-glow);
+  transform:translateY(30px) scale(0.92);
+  transition:transform .5s var(--ease-bounce);
+  position:relative;
+  overflow:hidden;
+}
+.modal-overlay.visible .memory-card{
+  transform:translateY(0) scale(1);
+}
+.memory-card::before{
+  content:"";
+  position:absolute;
+  top:-40%;
+  left:-20%;
+  width:140%;
+  height:140%;
+  background:radial-gradient(circle, rgba(157,78,221,0.25), transparent 60%);
+  pointer-events:none;
+}
+
+.memory-word{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:1.6rem;
+  letter-spacing:.02em;
+  margin:0 0 6px 0;
+  color:var(--text);
+}
+.memory-emoji{
+  font-size:2.6rem;
+  margin:6px 0 22px 0;
+  filter:drop-shadow(0 0 16px rgba(157,78,221,0.55));
+}
+.memory-text{
+  font-size:.98rem;
+  line-height:1.75;
+  color:rgba(248,244,255,.85);
+  margin:0 0 30px 0;
+  font-weight:300;
+}
+
+.btn-continue{
+  width:100%;
+}
+
+/* ---------- 8. PANTALLA FINAL ---------- */
+#screen-end{
+  text-align:center;
+  overflow-y:auto;
+}
+
+#confetti-canvas, #hearts-canvas{
+  position:fixed;
+  inset:0;
+  z-index:40;
+  pointer-events:none;
+}
+
+.letter-card{
+  max-width:560px;
+  width:100%;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:52px 40px;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:var(--shadow-soft);
+  opacity:0;
+  transform:translateY(24px);
+  animation:letterReveal 1.4s var(--ease-soft) .3s forwards;
+}
+
+.letter-title{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:1.9rem;
+  margin:0 0 30px 0;
+  background:linear-gradient(120deg, var(--text), var(--detail));
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.letter-body p{
+  font-size:1rem;
+  line-height:2;
+  color:rgba(248,244,255,.88);
+  font-weight:300;
+  margin:0 0 14px 0;
+  opacity:0;
+  animation:lineReveal .9s var(--ease-soft) forwards;
+}
+.letter-body p:nth-child(1){ animation-delay:1.0s; }
+.letter-body p:nth-child(2){ animation-delay:1.5s; }
+.letter-body p:nth-child(3){ animation-delay:2.0s; }
+.letter-body p:nth-child(4){ animation-delay:2.5s; }
+.letter-body p:nth-child(5){ animation-delay:3.0s; }
+.letter-body p:nth-child(6){ animation-delay:3.5s; }
+
+.letter-signoff{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:1.2rem;
+  margin-top:24px;
+  color:var(--detail);
+  opacity:0;
+  animation:lineReveal .9s var(--ease-soft) 4.1s forwards;
+}
+
+.replay-wrap{
+  margin-top:36px;
+  opacity:0;
+  animation:lineReveal .9s var(--ease-soft) 4.6s forwards;
+}
+
+/* ---------- 9. COMPONENTES REUTILIZABLES ---------- */
+.btn{
+  border:none;
+  border-radius:100px;
+  padding:16px 42px;
+  font-size:.95rem;
+  letter-spacing:.05em;
+  font-weight:600;
+  color:var(--text);
+  background:linear-gradient(135deg, var(--purple-main), var(--purple-bright));
+  box-shadow:0 10px 30px rgba(123,44,191,0.4);
+  transition:transform .35s var(--ease-bounce), box-shadow .35s ease, filter .3s ease;
+  position:relative;
+  overflow:hidden;
+}
+.btn::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+  transform:translateX(-120%);
+  transition:transform .6s ease;
+}
+.btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 14px 38px rgba(157,78,221,0.55);
+  filter:brightness(1.08);
+}
+.btn:hover::after{ transform:translateX(120%); }
+.btn:active{ transform:translateY(0); }
+
+/* ---------- 10. ANIMACIONES ---------- */
+@keyframes fadeUp{
+  from{ opacity:0; transform:translateY(22px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+@keyframes pulseGlow{
+  0%,100%{ opacity:.55; transform:scale(1); }
+  50%{ opacity:.85; transform:scale(1.08); }
+}
+@keyframes foundPop{
+  0%{ transform:scale(1); }
+  40%{ transform:scale(1.28); }
+  100%{ transform:scale(1); }
+}
+@keyframes letterReveal{
+  to{ opacity:1; transform:translateY(0); }
+}
+@keyframes lineReveal{
+  to{ opacity:1; }
+}
+@keyframes floatHeart{
+  0%{ transform:translateY(0) scale(0.6); opacity:0; }
+  15%{ opacity:1; }
+  100%{ transform:translateY(-140px) scale(1.1); opacity:0; }
+}
+.mini-heart{
+  position:absolute;
+  font-size:1.1rem;
+  color:var(--detail);
+  pointer-events:none;
+  animation:floatHeart 1.4s var(--ease-soft) forwards;
+  z-index:30;
+}
+
+/* ---------- 11. RESPONSIVE ---------- */
+@media (max-width:640px){
+  .difficulty-card{ width:100%; max-width:320px; padding:26px 20px; }
+  .board-wrap{ padding:10px; max-height:58vh; }
+  .cell{ min-width:22px; font-size:0.8rem; }
+  .letter-card{ padding:36px 22px; }
+  .memory-card{ padding:34px 22px; }
+  .game-header{ justify-content:center; text-align:center; }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Fondo animado de partículas moradas -->
+<canvas id="particle-canvas"></canvas>
+
+<div id="app">
+
+  <!-- ============ PANTALLA 1: INICIO ============ -->
+  <section class="screen active" id="screen-start">
+    <div class="start-glow"></div>
+    <p class="eyebrow">Un regalo para ti</p>
+    <h1 class="start-title">Nuestra Historia</h1>
+    <div class="heart-divider">
+      <span class="line"></span><span class="mark">♡</span><span class="line"></span>
+    </div>
+    <p class="start-subtitle">Cada palabra es un recuerdo.</p>
+    <div class="btn-primary-wrap">
+      <button class="btn" id="btn-start">Comenzar</button>
+    </div>
+  </section>
+
+  <!-- ============ PANTALLA 2: DIFICULTAD ============ -->
+  <section class="screen" id="screen-difficulty">
+    <p class="eyebrow">Elige tu camino</p>
+    <h2 class="difficulty-title">¿Qué tan profundo quieres buscar?</h2>
+    <p class="difficulty-subtitle">Cada nivel guarda recuerdos distintos entre nosotros.</p>
+    <div class="difficulty-grid">
+      <button class="difficulty-card" data-level="facil">
+        <div class="difficulty-icon">💜</div>
+        <h3 class="difficulty-name">Fácil</h3>
+        <p class="difficulty-desc">Tablero 10×10 — palabras en horizontal y vertical.</p>
+      </button>
+      <button class="difficulty-card" data-level="medio">
+        <div class="difficulty-icon">💜</div>
+        <h3 class="difficulty-name">Medio</h3>
+        <p class="difficulty-desc">Tablero 15×15 — horizontal, vertical y diagonal.</p>
+      </button>
+      <button class="difficulty-card" data-level="dificil">
+        <div class="difficulty-icon">💜</div>
+        <h3 class="difficulty-name">Difícil</h3>
+        <p class="difficulty-desc">Tablero 20×20 — todas las direcciones, incluso invertidas.</p>
+      </button>
+    </div>
+    <button class="back-link" id="btn-back-to-start">← Volver</button>
+  </section>
+
+  <!-- ============ PANTALLA 3: JUEGO ============ -->
+  <section class="screen" id="screen-game">
+    <div class="game-header">
+      <div class="game-title-block">
+        <span class="label">Nuestra Historia</span>
+        <span class="sub" id="level-label">Nivel</span>
+      </div>
+      <div class="progress-pill">
+        <span class="progress-label">Recuerdos encontrados</span>
+        <span class="progress-count"><span id="found-count">0</span> / <span id="total-count">0</span></span>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+      <button class="exit-btn" id="btn-exit-game">Salir</button>
+    </div>
+
+    <div class="board-wrap">
+      <div id="grid"></div>
+    </div>
+
+    <p class="hint-text">Arrastra sobre las letras para formar una palabra escondida. No sabrás cuáles son hasta encontrarlas.</p>
+  </section>
+
+  <!-- ============ PANTALLA 4: FINAL ============ -->
+  <section class="screen" id="screen-end">
+    <div class="letter-card">
+      <h2 class="letter-title">Para ti</h2>
+      <div class="letter-body">
+        <p>Cada palabra que encontraste representa un pedacito de nuestra historia.</p>
+        <p>Tal vez algunas fueron pequeñas.</p>
+        <p>Otras enormes.</p>
+        <p>Pero todas hicieron que me enamorara un poco más de ti.</p>
+        <p>Gracias por existir.</p>
+      </div>
+      <p class="letter-signoff">Te amo.</p>
+      <div class="replay-wrap">
+        <button class="btn" id="btn-replay">Volver a jugar</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Capas de efectos para la pantalla final -->
+<canvas id="confetti-canvas"></canvas>
+<canvas id="hearts-canvas"></canvas>
+
+<!-- ============ MODAL: RECUERDO ENCONTRADO ============ -->
+<div class="modal-overlay" id="memory-modal">
+  <div class="memory-card">
+    <h3 class="memory-word" id="memory-word">CINE</h3>
+    <div class="memory-emoji" id="memory-emoji">🎬</div>
+    <p class="memory-text" id="memory-text">Mensaje del recuerdo.</p>
+    <button class="btn btn-continue" id="btn-continue">Continuar</button>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   NUESTRA HISTORIA — MOTOR DEL JUEGO
+   Estructura del script:
+     1. Datos de contenido (palabras + mensajes por nivel)
+     2. Estado global de la aplicación
+     3. Utilidades (aleatoriedad, helpers de DOM)
+     4. Navegación entre pantallas
+     5. Fondo de partículas (canvas)
+     6. Generador de sopa de letras (algoritmo de colocación)
+     7. Renderizado del tablero
+     8. Selección de celdas (mouse + touch)
+     9. Validación de palabras encontradas
+    10. Modal de recuerdo
+    11. Progreso y finalización de nivel
+    12. Confeti + corazones (pantalla final)
+    13. Inicialización
+   ========================================================================== */
+
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------------------
+   1. DATOS DE CONTENIDO
+   Cada nivel define: tamaño de tablero, direcciones permitidas,
+   si se permiten palabras invertidas, y la lista de palabras con
+   su mensaje y emoji asociado.
+--------------------------------------------------------------------- */
+const LEVELS = {
+  facil: {
+    label: "Nivel fácil",
+    size: 10,
+    allowReverse: false,
+    directions: [
+      { dr: 0, dc: 1 },  // horizontal →
+      { dr: 1, dc: 0 },  // vertical ↓
+    ],
+    words: [
+      { word:"CINE", emoji:"🎬", text:"El lugar de nuestra primera cita y uno de mis lugares favoritos para estar contigo." },
+      { word:"MCDONALS", emoji:"🍟", text:"Nunca había conocido una persona que amara tanto ese sitio como tú; ahora también significa tiempo contigo." },
+      { word:"PIJAMADA", emoji:"🌙", text:"Nuestro espacio para olvidarnos del mundo y simplemente ser nosotros." },
+      { word:"BOULEVARD", emoji:"🎡", text:"La primera vez fui con Vadhir, conocí a tu familia y hasta terminé siendo un ladrón. Una experiencia inolvidable." },
+      { word:"UNIVERSIDAD", emoji:"🎓", text:"El lugar donde nos conocimos. Nunca habría pasado tanto tiempo ahí si no hubiera sido contigo." },
+    ]
+  },
+  medio: {
+    label: "Nivel medio",
+    size: 15,
+    allowReverse: false,
+    directions: [
+      { dr: 0, dc: 1 },   // horizontal →
+      { dr: 1, dc: 0 },   // vertical ↓
+      { dr: 1, dc: 1 },   // diagonal ↘
+      { dr: 1, dc: -1 },  // diagonal ↙
+    ],
+    words: [
+      { word:"SPIDERMAN", emoji:"🕷️", text:"Lo descubrí gracias a esa playera roja que te queda preciosa." },
+      { word:"VIDEOJUEGOS", emoji:"🎮", text:"Desde Clash hasta todo lo demás, jugar contigo siempre es especial." },
+      { word:"PELICULAS", emoji:"🎥", text:"Ver películas contigo hace que cualquier historia sea mejor." },
+      { word:"TIGRES", emoji:"🐯", text:"Gracias por compartir conmigo esa pasión." },
+      { word:"ONEPIECE", emoji:"🏴‍☠️", text:"Espero que algún día terminemos toda la historia juntos." },
+      { word:"MORADO", emoji:"💜", text:"Una bonita coincidencia que ambos amemos el mismo color." },
+      { word:"MUSICA", emoji:"🎵", text:"Las canciones que me enseñaste hicieron crecer mi gusto musical." },
+      { word:"AMOR", emoji:"❤️", text:"Te sigo amando y así seguirá mientras podamos estar juntos." },
+    ]
+  },
+  dificil: {
+    label: "Nivel difícil",
+    size: 20,
+    allowReverse: true,
+    directions: [
+      { dr: 0, dc: 1 }, { dr: 0, dc: -1 },
+      { dr: 1, dc: 0 }, { dr: -1, dc: 0 },
+      { dr: 1, dc: 1 }, { dr: -1, dc: -1 },
+      { dr: 1, dc: -1 }, { dr: -1, dc: 1 },
+    ],
+    words: [
+      { word:"GERBERAS", emoji:"🌼", text:"Tu flor favorita." },
+      { word:"ZOE", emoji:"🎸", text:"Una banda que ambos disfrutamos." },
+      { word:"GATO", emoji:"🐱", text:"Nuestro sueño y cariño por los gatos." },
+      { word:"BESO", emoji:"💋", text:"Si tuviera un lugar seguro, serían tus besos." },
+      { word:"MONITO", emoji:"🐵", text:"Siempre serás mi monito hermoso." },
+      { word:"PLAYA", emoji:"🏖️", text:"Quiero ver un atardecer contigo." },
+      { word:"PANTALLA", emoji:"📺", text:"La pantallota que imaginábamos para nuestro futuro." },
+      { word:"POLLO", emoji:"🍗", text:"Tu comida favorita; aún nos falta ese pollo." },
+      { word:"FUTURO", emoji:"✨", text:"El futuro que soñaba construir contigo." },
+      { word:"ROBLOX", emoji:"🧱", text:"Nunca imaginé divertirme tanto jugando contigo." },
+    ]
+  }
+};
+
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+/* ---------------------------------------------------------------------
+   2. ESTADO GLOBAL
+--------------------------------------------------------------------- */
+const state = {
+  currentLevelKey: null,
+  currentLevel: null,
+  gridSize: 0,
+  gridLetters: [],       // matriz [row][col] de letras
+  placements: [],        // [{word, cells:[{r,c},...], found:false, data}]
+  foundCount: 0,
+  totalWords: 0,
+
+  // selección en curso
+  isSelecting: false,
+  startCell: null,
+  currentPath: [],
+};
+
+/* ---------------------------------------------------------------------
+   3. UTILIDADES
+--------------------------------------------------------------------- */
+function rand(max){ return Math.floor(Math.random() * max); }
+
+function randomLetter(){ return ALPHABET[rand(ALPHABET.length)]; }
+
+function shuffle(array){
+  const a = array.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = rand(i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function qs(selector){ return document.querySelector(selector); }
+function qsa(selector){ return Array.from(document.querySelectorAll(selector)); }
+
+/* ---------------------------------------------------------------------
+   4. NAVEGACIÓN ENTRE PANTALLAS
+--------------------------------------------------------------------- */
+function showScreen(id){
+  qsa(".screen").forEach(s => s.classList.remove("active"));
+  qs("#" + id).classList.add("active");
+}
+
+/* ---------------------------------------------------------------------
+   5. FONDO DE PARTÍCULAS (CANVAS)
+   Pequeñas partículas moradas que flotan lentamente, dando
+   profundidad y una sensación "premium" al fondo de toda la app.
+--------------------------------------------------------------------- */
+const ParticleField = (function(){
+  const canvas = qs("#particle-canvas");
+  const ctx = canvas.getContext("2d");
+  let particles = [];
+  let w = 0, h = 0;
+  let rafId = null;
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+
+  function createParticles(){
+    const count = Math.min(90, Math.floor((w * h) / 18000));
+    particles = new Array(count).fill(null).map(() => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 2 + 0.6,
+      speedY: Math.random() * 0.35 + 0.08,
+      driftX: (Math.random() - 0.5) * 0.25,
+      alpha: Math.random() * 0.5 + 0.15,
+      hue: Math.random() > 0.5 ? "157,78,221" : "199,125,255",
+    }));
+  }
+
+  function tick(){
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => {
+      p.y -= p.speedY;
+      p.x += p.driftX;
+      if(p.y < -10){ p.y = h + 10; p.x = Math.random() * w; }
+      if(p.x < -10) p.x = w + 10;
+      if(p.x > w + 10) p.x = -10;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.hue}, ${p.alpha})`;
+      ctx.shadowColor = `rgba(${p.hue}, ${p.alpha})`;
+      ctx.shadowBlur = 6;
+      ctx.fill();
+    });
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function init(){
+    resize();
+    createParticles();
+    if(rafId) cancelAnimationFrame(rafId);
+    tick();
+    window.addEventListener("resize", () => { resize(); createParticles(); });
+  }
+
+  return { init };
+})();
+
+/* ---------------------------------------------------------------------
+   6. GENERADOR DE SOPA DE LETRAS
+   Algoritmo de colocación:
+   - Para cada palabra (de mayor a menor longitud, para facilitar
+     el encaje de las palabras más largas primero):
+       - Probar direcciones en orden aleatorio.
+       - Probar posiciones de inicio en orden aleatorio.
+       - Una posición es válida si cada celda está vacía o ya
+         contiene la misma letra que necesitamos (permite cruces).
+       - Si no cabe tras muchos intentos, se reintenta con una
+         copia limpia del tablero (hasta un límite de intentos
+         globales) para garantizar que SIEMPRE se coloquen todas
+         las palabras.
+   - Al finalizar, las celdas vacías se rellenan con letras
+     aleatorias.
+--------------------------------------------------------------------- */
+function buildEmptyGrid(size){
+  return new Array(size).fill(null).map(() => new Array(size).fill(null));
+}
+
+function tryPlaceWord(grid, size, word, directions, allowReverse){
+  const letters = word.split("");
+  const len = letters.length;
+  const dirsPool = allowReverse
+    ? directions
+    : directions; // las direcciones ya vienen definidas por nivel
+
+  // Generamos también la variante invertida de la palabra si el nivel lo permite
+  const variants = allowReverse ? [letters, letters.slice().reverse()] : [letters];
+
+  const shuffledDirs = shuffle(dirsPool);
+
+  for(const dir of shuffledDirs){
+    for(const variant of shuffle(variants)){
+      // Calculamos el rango válido de celdas de inicio para que la palabra
+      // completa quepa dentro del tablero en esa dirección.
+      const minRow = dir.dr === -1 ? (len - 1) : 0;
+      const maxRow = dir.dr === 1 ? (size - len) : (size - 1);
+      const minCol = dir.dc === -1 ? (len - 1) : 0;
+      const maxCol = dir.dc === 1 ? (size - len) : (size - 1);
+
+      if(minRow > maxRow || minCol > maxCol) continue;
+
+      const startCells = [];
+      for(let r = minRow; r <= maxRow; r++){
+        for(let c = minCol; c <= maxCol; c++){
+          startCells.push({ r, c });
+        }
+      }
+
+      for(const start of shuffle(startCells)){
+        let fits = true;
+        const cells = [];
+        for(let i = 0; i < len; i++){
+          const r = start.r + dir.dr * i;
+          const c = start.c + dir.dc * i;
+          const existing = grid[r][c];
+          if(existing !== null && existing !== variant[i]){
+            fits = false;
+            break;
+          }
+          cells.push({ r, c });
+        }
+        if(fits){
+          cells.forEach((cell, i) => { grid[cell.r][cell.c] = variant[i]; });
+          return cells;
+        }
+      }
+    }
+  }
+  return null; // no se pudo colocar con la configuración actual
+}
+
+function generatePuzzle(levelKey){
+  const level = LEVELS[levelKey];
+  const longest = Math.max(...level.words.map(w => w.word.length));
+  // Aseguramos que el tablero sea al menos tan grande como la palabra más larga.
+  const size = Math.max(level.size, longest);
+
+  const MAX_GLOBAL_ATTEMPTS = 40;
+  let grid, placements;
+
+  for(let attempt = 0; attempt < MAX_GLOBAL_ATTEMPTS; attempt++){
+    grid = buildEmptyGrid(size);
+    placements = [];
+    // Colocamos las palabras más largas primero: encajan mejor y dejan
+    // más espacio libre para las cortas al final.
+    const orderedWords = level.words.slice().sort((a, b) => b.word.length - a.word.length);
+
+    let allPlaced = true;
+    for(const item of orderedWords){
+      const cells = tryPlaceWord(grid, size, item.word, level.directions, level.allowReverse);
+      if(!cells){ allPlaced = false; break; }
+      placements.push({ word: item.word, cells, found: false, data: item });
+    }
+
+    if(allPlaced) break;
+    if(attempt === MAX_GLOBAL_ATTEMPTS - 1){
+      // Salvaguarda extrema: no debería ocurrir con estas listas de palabras,
+      // pero si pasara, evitamos romper la app.
+      console.warn("No se pudieron colocar todas las palabras tras varios intentos.");
+    }
+  }
+
+  // Rellenamos las celdas vacías con letras aleatorias
+  for(let r = 0; r < size; r++){
+    for(let c = 0; c < size; c++){
+      if(grid[r][c] === null) grid[r][c] = randomLetter();
+    }
+  }
+
+  return { grid, placements, size };
+}
+
+/* ---------------------------------------------------------------------
+   7. RENDERIZADO DEL TABLERO
+--------------------------------------------------------------------- */
+function renderGrid(){
+  const gridEl = qs("#grid");
+  gridEl.innerHTML = "";
+  gridEl.style.gridTemplateColumns = `repeat(${state.gridSize}, 1fr)`;
+  gridEl.style.gridTemplateRows = `repeat(${state.gridSize}, 1fr)`;
+
+  // Ajustamos el ancho máximo de celda según el tamaño del tablero para
+  // que tableros grandes (20x20) sigan siendo cómodos en pantalla.
+  const cellPx = state.gridSize <= 10 ? 46 : state.gridSize <= 15 ? 36 : 28;
+  gridEl.style.width = `${cellPx * state.gridSize}px`;
+  gridEl.style.height = `${cellPx * state.gridSize}px`;
+
+  for(let r = 0; r < state.gridSize; r++){
+    for(let c = 0; c < state.gridSize; c++){
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.textContent = state.gridLetters[r][c];
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      gridEl.appendChild(cell);
+    }
+  }
+}
+
+function getCellEl(r, c){
+  return qs(`.cell[data-row="${r}"][data-col="${c}"]`);
+}
+
+/* ---------------------------------------------------------------------
+   8. SELECCIÓN DE CELDAS (MOUSE + TOUCH)
+   Se permite arrastrar en línea recta (horizontal, vertical o
+   diagonal). Al soltar, se valida si el camino coincide con
+   alguna palabra pendiente (en cualquiera de los dos sentidos).
+--------------------------------------------------------------------- */
+function cellFromPoint(x, y){
+  const el = document.elementFromPoint(x, y);
+  if(!el || !el.classList || !el.classList.contains("cell")) return null;
+  return { r: parseInt(el.dataset.row, 10), c: parseInt(el.dataset.col, 10), el };
+}
+
+function computeLine(start, end){
+  const dRow = end.r - start.r;
+  const dCol = end.c - start.c;
+
+  const dr = Math.sign(dRow);
+  const dc = Math.sign(dCol);
+
+  // Movimiento nulo (misma celda)
+  if(dr === 0 && dc === 0) return [start];
+
+  // Solo permitimos líneas rectas: horizontal, vertical o diagonal exacta
+  if(dr !== 0 && dc !== 0 && Math.abs(dRow) !== Math.abs(dCol)) return null;
+
+  const steps = Math.max(Math.abs(dRow), Math.abs(dCol));
+  const path = [];
+  for(let i = 0; i <= steps; i++){
+    path.push({ r: start.r + dr * i, c: start.c + dc * i });
+  }
+  return path;
+}
+
+function clearSelectionVisuals(){
+  qsa(".cell.selecting").forEach(el => el.classList.remove("selecting"));
+}
+
+function paintPath(path){
+  clearSelectionVisuals();
+  path.forEach(p => {
+    const el = getCellEl(p.r, p.c);
+    if(el) el.classList.add("selecting");
+  });
+}
+
+function beginSelection(cellInfo){
+  state.isSelecting = true;
+  state.startCell = { r: cellInfo.r, c: cellInfo.c };
+  state.currentPath = [state.startCell];
+  paintPath(state.currentPath);
+}
+
+function updateSelection(cellInfo){
+  if(!state.isSelecting) return;
+  const path = computeLine(state.startCell, { r: cellInfo.r, c: cellInfo.c });
+  if(path){
+    state.currentPath = path;
+    paintPath(path);
+  }
+}
+
+function endSelection(){
+  if(!state.isSelecting) return;
+  state.isSelecting = false;
+  clearSelectionVisuals();
+  checkSelectedWord(state.currentPath);
+  state.currentPath = [];
+  state.startCell = null;
+}
+
+function setupInputHandlers(){
+  const gridEl = qs("#grid");
+
+  // ----- Mouse -----
+  gridEl.addEventListener("mousedown", e => {
+    const info = cellFromPoint(e.clientX, e.clientY);
+    if(info) beginSelection(info);
+  });
+  window.addEventListener("mousemove", e => {
+    if(!state.isSelecting) return;
+    const info = cellFromPoint(e.clientX, e.clientY);
+    if(info) updateSelection(info);
+  });
+  window.addEventListener("mouseup", () => endSelection());
+
+  // ----- Touch -----
+  gridEl.addEventListener("touchstart", e => {
+    const t = e.touches[0];
+    const info = cellFromPoint(t.clientX, t.clientY);
+    if(info) beginSelection(info);
+  }, { passive: true });
+
+  gridEl.addEventListener("touchmove", e => {
+    if(!state.isSelecting) return;
+    const t = e.touches[0];
+    const info = cellFromPoint(t.clientX, t.clientY);
+    if(info) updateSelection(info);
+    e.preventDefault();
+  }, { passive: false });
+
+  gridEl.addEventListener("touchend", () => endSelection());
+}
+
+/* ---------------------------------------------------------------------
+   9. VALIDACIÓN DE PALABRAS ENCONTRADAS
+--------------------------------------------------------------------- */
+function pathsMatch(pathA, cellsB){
+  if(pathA.length !== cellsB.length) return false;
+  const forward = pathA.every((p, i) => p.r === cellsB[i].r && p.c === cellsB[i].c);
+  if(forward) return true;
+  const reversed = cellsB.slice().reverse();
+  return pathA.every((p, i) => p.r === reversed[i].r && p.c === reversed[i].c);
+}
+
+function checkSelectedWord(path){
+  if(!path || path.length < 2) return;
+
+  for(const placement of state.placements){
+    if(placement.found) continue;
+    if(pathsMatch(path, placement.cells)){
+      markWordFound(placement);
+      return;
+    }
+  }
+}
+
+function markWordFound(placement){
+  placement.found = true;
+  state.foundCount++;
+
+  placement.cells.forEach(cell => {
+    const el = getCellEl(cell.r, cell.c);
+    if(el) el.classList.add("found");
+  });
+
+  spawnMiniHearts(placement.cells);
+  updateProgressUI();
+  openMemoryModal(placement.data);
+}
+
+function spawnMiniHearts(cells){
+  // Pequeños corazones flotando desde el centro de la palabra encontrada
+  const mid = cells[Math.floor(cells.length / 2)];
+  const el = getCellEl(mid.r, mid.c);
+  if(!el) return;
+  const rect = el.getBoundingClientRect();
+
+  for(let i = 0; i < 5; i++){
+    const heart = document.createElement("span");
+    heart.className = "mini-heart";
+    heart.textContent = "♡";
+    heart.style.left = (rect.left + rect.width / 2 + (Math.random() * 30 - 15)) + "px";
+    heart.style.top = (rect.top + (Math.random() * 10 - 5)) + "px";
+    heart.style.animationDelay = (i * 0.08) + "s";
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 1600);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   10. MODAL DE RECUERDO
+--------------------------------------------------------------------- */
+function openMemoryModal(data){
+  qs("#memory-word").textContent = data.word;
+  qs("#memory-emoji").textContent = data.emoji;
+  qs("#memory-text").textContent = data.text;
+  qs("#memory-modal").classList.add("visible");
+}
+
+function closeMemoryModal(){
+  qs("#memory-modal").classList.remove("visible");
+  // Si ya se encontraron todas las palabras, pasamos a la pantalla final
+  if(state.foundCount >= state.totalWords){
+    setTimeout(goToEndScreen, 400);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   11. PROGRESO Y FINALIZACIÓN DE NIVEL
+--------------------------------------------------------------------- */
+function updateProgressUI(){
+  qs("#found-count").textContent = state.foundCount;
+  qs("#total-count").textContent = state.totalWords;
+  const pct = state.totalWords ? (state.foundCount / state.totalWords) * 100 : 0;
+  qs("#progress-fill").style.width = pct + "%";
+}
+
+function startLevel(levelKey){
+  state.currentLevelKey = levelKey;
+  state.currentLevel = LEVELS[levelKey];
+  state.foundCount = 0;
+  state.totalWords = state.currentLevel.words.length;
+
+  const puzzle = generatePuzzle(levelKey);
+  state.gridLetters = puzzle.grid;
+  state.gridSize = puzzle.size;
+  state.placements = puzzle.placements;
+
+  qs("#level-label").textContent = state.currentLevel.label;
+  updateProgressUI();
+  renderGrid();
+  showScreen("screen-game");
+}
+
+function goToEndScreen(){
+  showScreen("screen-end");
+  launchConfetti();
+  launchFloatingHearts();
+}
+
+/* ---------------------------------------------------------------------
+   12. CONFETI + CORAZONES (PANTALLA FINAL)
+--------------------------------------------------------------------- */
+function launchConfetti(){
+  const canvas = qs("#confetti-canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ["#7B2CBF", "#9D4EDD", "#C77DFF", "#F8F4FF"];
+  const pieces = new Array(140).fill(null).map(() => ({
+    x: Math.random() * canvas.width,
+    y: -20 - Math.random() * canvas.height * 0.5,
+    size: Math.random() * 8 + 4,
+    speedY: Math.random() * 3 + 2,
+    speedX: (Math.random() - 0.5) * 2,
+    rotation: Math.random() * 360,
+    rotSpeed: (Math.random() - 0.5) * 8,
+    color: colors[rand(colors.length)],
+  }));
+
+  let frame = 0;
+  const maxFrames = 260;
+
+  function tick(){
+    frame++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.y += p.speedY;
+      p.x += p.speedX;
+      p.rotation += p.rotSpeed;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rotation * Math.PI) / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      ctx.restore();
+    });
+
+    if(frame < maxFrames){
+      requestAnimationFrame(tick);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  tick();
+}
+
+function launchFloatingHearts(){
+  const canvas = qs("#hearts-canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  function drawHeart(x, y, size, alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y);
+    ctx.scale(size / 20, size / 20);
+    ctx.beginPath();
+    ctx.moveTo(0, 6);
+    ctx.bezierCurveTo(0, -4, -10, -4, -10, 4);
+    ctx.bezierCurveTo(-10, 10, 0, 14, 0, 20);
+    ctx.bezierCurveTo(0, 14, 10, 10, 10, 4);
+    ctx.bezierCurveTo(10, -4, 0, -4, 0, 6);
+    ctx.closePath();
+    ctx.fillStyle = "#C77DFF";
+    ctx.fill();
+    ctx.restore();
+  }
+
+  const hearts = new Array(26).fill(null).map(() => ({
+    x: Math.random() * canvas.width,
+    y: canvas.height + Math.random() * 200,
+    size: Math.random() * 14 + 10,
+    speed: Math.random() * 1.2 + 0.5,
+    drift: (Math.random() - 0.5) * 0.6,
+    alpha: Math.random() * 0.5 + 0.4,
+  }));
+
+  let frame = 0;
+  const maxFrames = 420;
+
+  function tick(){
+    frame++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hearts.forEach(h => {
+      h.y -= h.speed;
+      h.x += h.drift;
+      if(h.y < -30){ h.y = canvas.height + 30; h.x = Math.random() * canvas.width; }
+      drawHeart(h.x, h.y, h.size, h.alpha);
+    });
+
+    if(frame < maxFrames){
+      requestAnimationFrame(tick);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  tick();
+}
+
+/* ---------------------------------------------------------------------
+   13. INICIALIZACIÓN
+--------------------------------------------------------------------- */
+function bindStaticEvents(){
+  qs("#btn-start").addEventListener("click", () => showScreen("screen-difficulty"));
+  qs("#btn-back-to-start").addEventListener("click", () => showScreen("screen-start"));
+  qs("#btn-exit-game").addEventListener("click", () => showScreen("screen-difficulty"));
+
+  qsa(".difficulty-card").forEach(card => {
+    card.addEventListener("click", () => startLevel(card.dataset.level));
+  });
+
+  qs("#btn-continue").addEventListener("click", closeMemoryModal);
+
+  qs("#btn-replay").addEventListener("click", () => {
+    showScreen("screen-difficulty");
+  });
+
+  // Cerrar modal también al hacer click fuera de la tarjeta
+  qs("#memory-modal").addEventListener("click", e => {
+    if(e.target.id === "memory-modal") closeMemoryModal();
+  });
+}
+
+function init(){
+  ParticleField.init();
+  setupInputHandlers();
+  bindStaticEvents();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+
+})();
+</script>
+</body>
+</html>
